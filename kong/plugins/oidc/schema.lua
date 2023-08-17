@@ -293,6 +293,18 @@ return {
               },
               default = {}
             }
+          },
+          {
+            http_proxy = {
+              type = "string",
+              required = false
+            }
+          },
+          {
+            https_proxy = {
+              type = "string",
+              required = false
+            }
           }
         }
       }
