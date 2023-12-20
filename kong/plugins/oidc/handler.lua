@@ -5,6 +5,7 @@ local OidcHandler = {
 local utils = require("kong.plugins.oidc.utils")
 local filter = require("kong.plugins.oidc.filter")
 local session = require("kong.plugins.oidc.session")
+local cjson = require "cjson"
 
 
 function OidcHandler:access(config)
@@ -92,9 +93,21 @@ function make_oidc(oidcConfig)
     -- constant for resty.oidc library
     unauth_action = "deny"
   end
-  local res, err = require("resty.openidc").authenticate(oidcConfig, ngx.var.request_uri, unauth_action)
+  local uri = ngx.var.request_uri
+  if ngx.var.request_uri:match"[%?&]login$" then
+    unauth_action = "auth"
+	uri = string.sub(ngx.var.request_uri, 1, -7)
+  else 
+    unauth_action = "deny"
+  end
+  ngx.log(ngx.DEBUG, "seprokof-2 " .. uri)
+  ngx.log(ngx.DEBUG, "seprokof-1 " .. unauth_action)
+  local res, err = require("resty.openidc").authenticate(oidcConfig, uri, unauth_action)
+  ngx.log(ngx.DEBUG, "seprokof0")
+  ngx.log(ngx.DEBUG, "seprokof1 " .. cjson.encode(res))
 
   if err then
+    ngx.log(ngx.DEBUG, "seprokof2 " .. err)
     if err == 'unauthorized request' then
       return kong.response.error(ngx.HTTP_UNAUTHORIZED)
     else
