@@ -18,8 +18,11 @@ function OidcHandler:access(config)
     return
   end
 
+  ngx.log(ngx.DEBUG, "seprokof1")
   if filter.shouldProcessRequest(oidcConfig) then
+    ngx.log(ngx.DEBUG, "seprokof2")
     session.configure(config)
+	ngx.log(ngx.DEBUG, "seprokof3")
     handle(oidcConfig)
   else
     ngx.log(ngx.DEBUG, "OidcHandler ignoring request, path: " .. ngx.var.request_uri)
@@ -31,9 +34,13 @@ end
 function handle(oidcConfig)
   local response
 
+  ngx.log(ngx.DEBUG, "seprokof4")
   if oidcConfig.bearer_jwt_auth_enable then
+    ngx.log(ngx.DEBUG, "seprokof5")
     response = verify_bearer_jwt(oidcConfig)
+	ngx.log(ngx.DEBUG, "seprokof6"..response)
     if response then
+	  ngx.log(ngx.DEBUG, "seprokof7")
       utils.setCredentials(response)
       utils.injectGroups(response, oidcConfig.groups_claim)
       utils.injectHeaders(oidcConfig.header_names, oidcConfig.header_claims, { response })
@@ -44,8 +51,10 @@ function handle(oidcConfig)
     end
   end
 
+  ngx.log(ngx.DEBUG, "seprokof8")
   if oidcConfig.introspection_endpoint then
     response = introspect(oidcConfig)
+	ngx.log(ngx.DEBUG, "seprokof9"..response)
     if response then
       utils.setCredentials(response)
       utils.injectGroups(response, oidcConfig.groups_claim)
@@ -56,8 +65,11 @@ function handle(oidcConfig)
     end
   end
 
+  ngx.log(ngx.DEBUG, "seprokof10")
   if response == nil then
+    ngx.log(ngx.DEBUG, "seprokof11")
     response = make_oidc(oidcConfig)
+	ngx.log(ngx.DEBUG, "seprokof14")
     if response then
       if response.user or response.id_token then
         -- is there any scenario where lua-resty-openidc would not provide id_token?
@@ -86,6 +98,7 @@ function handle(oidcConfig)
 end
 
 function make_oidc(oidcConfig)
+  ngx.log(ngx.DEBUG, "seprokof12")
   ngx.log(ngx.DEBUG, "OidcHandler calling authenticate, requested path: " .. ngx.var.request_uri)
   local unauth_action = oidcConfig.unauth_action
   if unauth_action ~= "auth" then
@@ -95,6 +108,7 @@ function make_oidc(oidcConfig)
   local res, err = require("resty.openidc").authenticate(oidcConfig, ngx.var.request_uri, unauth_action)
 
   if err then
+    ngx.log(ngx.DEBUG, "seprokof13"..err)
     if err == 'unauthorized request' then
       return kong.response.error(ngx.HTTP_UNAUTHORIZED)
     else
